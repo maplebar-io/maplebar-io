@@ -8,6 +8,8 @@ import { extractPaletteFromFile } from "../lib/palette";
 import { Sparkles, Loader2, RotateCcw } from "lucide-react";
 import chroma from "chroma-js";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
 function hexesFromPalette(p) {
   return (p || []).map((x) => x.hex).filter(Boolean);
 }
@@ -58,25 +60,25 @@ export default function PaletteTool() {
   }
 
   async function enhancePalette(candidateHexes, desiredCount) {
-    const res = await fetch("/api/palette/enhance", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await fetch(`${API_BASE}/api/palette/enhance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
         colors: candidateHexes,
         count: desiredCount,
         style: "canva",
-      }),
+        }),
     });
 
     if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      throw new Error(j?.error || "Enhancement failed");
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || "Enhancement failed");
     }
 
     const data = await res.json();
     const hexes = (data.palette || []).map((p) => p.hex);
     return { hexes, roles: data.palette || [] };
-  }
+    }
 
   async function generateAll(f, desiredCount, myRunId) {
     setErr("");
