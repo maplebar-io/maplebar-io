@@ -59,10 +59,14 @@ export default function PaletteTool() {
     setTimeout(() => setModalOpen(false), 220);
   }
 
-  async function enhancePalette(candidateHexes, desiredCount) {
-    const payload = { candidateHexes, desiredCount };
+    async function enhancePalette(candidateHexes, desiredCount) {
+    const payload = {
+        colors: candidateHexes,
+        count: desiredCount,
+        style: "canva",
+    };
 
-    const res = await fetch(`${API_BASE}/api/palette`, {
+    const res = await fetch(`${API_BASE}/api/palette/enhance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
