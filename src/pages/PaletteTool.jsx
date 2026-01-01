@@ -60,14 +60,12 @@ export default function PaletteTool() {
   }
 
   async function enhancePalette(candidateHexes, desiredCount) {
-    const res = await fetch(`${API_BASE}/api/palette/enhance`, {
+    const payload = { candidateHexes, desiredCount };
+
+    const res = await fetch(`${API_BASE}/api/palette`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-        colors: candidateHexes,
-        count: desiredCount,
-        style: "canva",
-        }),
+        body: JSON.stringify(payload),
     });
 
     if (!res.ok) {

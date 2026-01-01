@@ -128,6 +128,9 @@ const BrushesBody = z.object({
 });
 
 /* ----------------------------- Routes ----------------------------- */
+app.get("/", (req, res) => {
+  res.status(200).send("maplebar api ok");
+});
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
@@ -373,6 +376,6 @@ app.post("/api/brushes/generate", async (req, res) => {
 /* ----------------------------- Listen ----------------------------- */
 
 const PORT = process.env.PORT || 8787;
-app.listen(PORT, () => {
-  console.log(`maplebar api listening on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`maplebar api listening on port ${PORT}`);
 });
