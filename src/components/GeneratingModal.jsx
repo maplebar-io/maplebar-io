@@ -1,5 +1,6 @@
 import React from "react";
 import { Sparkles, Wand2, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import AdSenseUnit from "./AdSenseUnit"; 
 
 function Step({ icon: Icon, title, active, done }) {
   return (
@@ -96,8 +97,8 @@ export default function GeneratingModal({ open, progress = 0, phase = "extract",
           </div>
 
           {/* Replace this div with your ad component/script later */}
-          <div className="mt-3 h-20 rounded-xl border border-dashed border-slate-200 bg-slate-50 grid place-items-center text-slate-400 text-sm">
-            Your ad goes here
+          <div className="mt-3 min-h-[90px]">
+            <AdSenseUnit slot="3296020168" />
           </div>
 
           <div className="mt-2 text-[11px] text-slate-400">
