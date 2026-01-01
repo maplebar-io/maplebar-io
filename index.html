@@ -1,34 +1,40 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z12GR9YT1P"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-Z12GR9YT1P', {
         anonymize_ip: true
       });
     </script>
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- AdSense -->
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8930862197186548"
+      crossorigin="anonymous"></script>
+
+    <!-- Meta / Icons -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Generate Color Palette from Image | maplebar.io</title>
-    <script 
-      async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8930862197186548"
-      crossorigin="anonymous">
-  </script>
-  <script
-    async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8930862197186548"
-    crossorigin="anonymous">
-  </script>
+
+    <meta
+      name="description"
+      content="Free color palette generator. Upload an image to instantly extract clean color palettes with HEX and RGB values — fast, private, and runs locally in your browser."
+    />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

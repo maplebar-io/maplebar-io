@@ -1,13 +1,13 @@
 import React from "react";
 
+const LAST_UPDATED = "2025-12-31";
+
 export default function PrivacyPolicy() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 text-slate-800">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
 
-      <p className="mb-4">
-        Last updated: {new Date().getFullYear()}
-      </p>
+      <p className="mb-4">Last updated: {LAST_UPDATED}</p>
 
       <p className="mb-6">
         Maplebar ("we", "our", or "us") operates the website maplebar.io.

@@ -8,7 +8,7 @@ import { extractPaletteFromFile } from "../lib/palette";
 import { Sparkles, Loader2, RotateCcw } from "lucide-react";
 import chroma from "chroma-js";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 function hexesFromPalette(p) {
   return (p || []).map((x) => x.hex).filter(Boolean);
@@ -56,7 +56,7 @@ export default function PaletteTool() {
 
   function endModal() {
     setProgress(1);
-    setTimeout(() => setModalOpen(false), 220);
+    setTimeout(() => setModalOpen(false), 260); // match fadeMs
   }
 
     async function enhancePalette(candidateHexes, desiredCount) {
@@ -293,7 +293,7 @@ export default function PaletteTool() {
 
         <div className="lg:col-span-7 min-w-0 space-y-4 sm:space-y-6">
           {palette ? (
-            <Palette palette={palette} />
+            <Palette key={runIdRef.current} palette={palette} />
           ) : (
             <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white/80 p-4 sm:p-6 shadow-soft backdrop-blur">
               <div className="text-slate-900 font-semibold text-lg">
