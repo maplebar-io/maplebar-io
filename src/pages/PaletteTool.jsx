@@ -28,6 +28,8 @@ function sleep(ms) {
 }
 
 export default function PaletteTool() {
+  console.log("VITE_API_BASE_URL =", import.meta.env.VITE_API_BASE_URL);
+  
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [count, setCount] = useState(6);
