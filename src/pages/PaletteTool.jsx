@@ -8,7 +8,10 @@ import { extractPaletteFromFile } from "../lib/palette";
 import { Sparkles, Loader2, RotateCcw } from "lucide-react";
 import chroma from "chroma-js";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+// ✅ Make API_BASE safer (trim + remove trailing slashes)
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
 
 function hexesFromPalette(p) {
   return (p || []).map((x) => x.hex).filter(Boolean);
@@ -29,7 +32,11 @@ function sleep(ms) {
 
 export default function PaletteTool() {
   console.log("VITE_API_BASE_URL =", import.meta.env.VITE_API_BASE_URL);
-  
+  console.log(
+    "Enhance URL =",
+    API_BASE ? `${API_BASE}/api/palette/enhance` : "/api/palette/enhance"
+  );
+
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [count, setCount] = useState(6);
@@ -61,28 +68,33 @@ export default function PaletteTool() {
     setTimeout(() => setModalOpen(false), 260); // match fadeMs
   }
 
-    async function enhancePalette(candidateHexes, desiredCount) {
+  async function enhancePalette(candidateHexes, desiredCount) {
     const payload = {
-        colors: candidateHexes,
-        count: desiredCount,
-        style: "canva",
+      colors: candidateHexes,
+      count: desiredCount,
+      style: "canva",
     };
 
-    const res = await fetch(`${API_BASE}/api/palette/enhance`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    // ✅ Works whether API_BASE is set or not (falls back to same-origin /api)
+    const url = API_BASE
+      ? `${API_BASE}/api/palette/enhance`
+      : `/api/palette/enhance`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j?.error || "Enhancement failed");
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j?.error || "Enhancement failed");
     }
 
     const data = await res.json();
     const hexes = (data.palette || []).map((p) => p.hex);
     return { hexes, roles: data.palette || [] };
-    }
+  }
 
   async function generateAll(f, desiredCount, myRunId) {
     setErr("");
@@ -93,7 +105,11 @@ export default function PaletteTool() {
     await sleep(120);
 
     const candidateCount = Math.max(10, Math.min(24, desiredCount * 3));
+
+    // ✅ Helpful logs to see if the failure is local extraction vs API
+    console.log("Starting local extract…", { candidateCount, desiredCount });
     const candidates = await extractPaletteFromFile(f, candidateCount);
+    console.log("Local extract OK:", candidates?.length);
 
     if (runIdRef.current !== myRunId) return null;
 
@@ -150,6 +166,8 @@ export default function PaletteTool() {
 
       setPalette(p);
     } catch (e) {
+      // ✅ show the real error in DevTools
+      console.error("PaletteTool fatal error (handleFile):", e);
       setErr(e?.message || "Something went wrong generating the palette.");
     } finally {
       setBusy(false);
@@ -172,6 +190,8 @@ export default function PaletteTool() {
 
       setPalette(p);
     } catch (e) {
+      // ✅ show the real error in DevTools
+      console.error("PaletteTool fatal error (regenerate):", e);
       setErr(e?.message || "Something went wrong generating the palette.");
     } finally {
       setBusy(false);
