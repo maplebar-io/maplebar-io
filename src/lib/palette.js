@@ -1,3 +1,4 @@
+// src/lib/palette.js
 import chroma from "chroma-js";
 import { kmeans } from "ml-kmeans";
 
@@ -44,7 +45,6 @@ function sortColorsNice(colors) {
 function normalizeCenters(km) {
   const candidates = [];
 
-  // common shapes
   if (Array.isArray(km?.means)) candidates.push(...km.means);
   if (Array.isArray(km?.centroids)) candidates.push(...km.centroids);
 
@@ -57,7 +57,6 @@ function normalizeCenters(km) {
     }
   }
 
-  // Final filter: keep only arrays of length 3 with finite numbers
   const cleaned = candidates
     .map((v) => {
       if (!Array.isArray(v) || v.length < 3) return null;
@@ -72,71 +71,115 @@ function normalizeCenters(km) {
   return cleaned;
 }
 
-export async function extractPaletteFromFile(file, count = 6) {
+/**
+ * ✅ Robust image decode:
+ * - Prefer createImageBitmap(file) (fast + reliable)
+ * - Fallback to <img>.decode() with a friendly Error message
+ */
+async function decodeImageFromFile(file) {
+  // Best path in modern browsers
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bmp = await createImageBitmap(file);
+      return bmp; // ImageBitmap
+    } catch {
+      // fall through to <img> decode
+    }
+  }
+
+  // Fallback path
   const url = URL.createObjectURL(file);
-
   try {
-    const img = await new Promise((resolve, reject) => {
-      const im = new Image();
-      im.onload = () => resolve(im);
-      im.onerror = reject;
-      im.crossOrigin = "anonymous";
-      im.src = url;
-    });
+    const im = new Image();
 
-    const maxDim = 900;
-    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-    const w = Math.max(1, Math.round(img.width * scale));
-    const h = Math.max(1, Math.round(img.height * scale));
+    // Important: set src AFTER handlers (and decode) are set up
+    im.src = url;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-    ctx.drawImage(img, 0, 0, w, h);
-    const imageData = ctx.getImageData(0, 0, w, h);
-
-    const pts = samplePixels(imageData);
-    if (pts.length < 50) throw new Error("Not enough color information in that image.");
-
-    const k = Math.max(3, Math.min(12, Number(count) || 6));
-    const km = kmeans(pts, k, { seed: 42 });
-
-    const rawCenters = normalizeCenters(km);
-    if (!rawCenters.length) {
-      // If this happens, ml-kmeans gave us something unexpected
-      throw new Error("Palette engine failed to extract cluster centers.");
+    // decode() gives a real rejection we can catch
+    if (typeof im.decode === "function") {
+      try {
+        await im.decode();
+        return im;
+      } catch (err) {
+        throw new Error(
+          "Could not read that image. Please upload a PNG, JPG, or WEBP file."
+        );
+      }
     }
 
-    const centers = rawCenters.map(([r, g, b]) => [
-      Math.round(r),
-      Math.round(g),
-      Math.round(b),
-    ]);
+    // Older browsers: use onload/onerror but reject with Error (not Event)
+    await new Promise((resolve, reject) => {
+      im.onload = () => resolve();
+      im.onerror = () =>
+        reject(
+          new Error(
+            "Could not read that image. Please upload a PNG, JPG, or WEBP file."
+          )
+        );
+    });
 
-    // Deduplicate close colors
-    function rgbDist(a, b) {
+    return im;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+export async function extractPaletteFromFile(file, count = 6) {
+  const img = await decodeImageFromFile(file);
+
+  const maxDim = 900;
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.max(1, Math.round(img.width * scale));
+  const h = Math.max(1, Math.round(img.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Canvas is not supported in this browser.");
+
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const pts = samplePixels(imageData);
+
+  if (pts.length < 50) {
+    throw new Error("Not enough color information in that image.");
+  }
+
+  const k = Math.max(3, Math.min(12, Number(count) || 6));
+  const km = kmeans(pts, k, { seed: 42 });
+
+  const rawCenters = normalizeCenters(km);
+  if (!rawCenters.length) {
+    throw new Error("Palette engine failed to extract cluster centers.");
+  }
+
+  const centers = rawCenters.map(([r, g, b]) => [
+    Math.round(r),
+    Math.round(g),
+    Math.round(b),
+  ]);
+
+  function rgbDist(a, b) {
     const dr = a[0] - b[0];
     const dg = a[1] - b[1];
     const db = a[2] - b[2];
     return Math.sqrt(dr * dr + dg * dg + db * db);
-    }
+  }
 
-    // Deduplicate close colors
-    const deduped = [];
-    for (const c of centers) {
+  // Deduplicate close colors
+  const deduped = [];
+  for (const c of centers) {
     const tooClose = deduped.some((d) => rgbDist(d, c) < 12);
     if (!tooClose) deduped.push(c);
-    }
-
-    const final = sortColorsNice(deduped).slice(0, k);
-
-    return final.map((rgb) => ({
-      rgb,
-      hex: chroma(rgb).hex().toUpperCase(),
-    }));
-  } finally {
-    URL.revokeObjectURL(url);
   }
+
+  const final = sortColorsNice(deduped).slice(0, k);
+
+  return final.map((rgb) => ({
+    rgb,
+    hex: chroma(rgb).hex().toUpperCase(),
+  }));
 }
